@@ -7,21 +7,21 @@ const uint8_t pPort[] = {
   // 11~20 號 (單號腳)
   29, 31, 33, 35, 37, 39, 41, 43, 45, 47
 };
-
 const uint8_t N = sizeof(pPort) / sizeof(pPort[0]);
 
-// 用來記錄上一次傳送的狀態，避免重複傳送
 String lastSentState = "";
+unsigned long lastForceSendTime = 0; // ★ 新增：用來計時的變數
 
 void setup() {
   // 設定所有腳位為輸入模式
   for(int i=0; i<N; i++) {
-    pinMode(pPort[i], INPUT); 
+    pinMode(pPort[i], INPUT);
   }
   
+  pinMode(13, OUTPUT); // 內建 LED
   Serial.begin(115200); // 電腦監控用
-  Serial1.begin(9600);  // 與 ESP32 通訊用 (TX1=18, RX1=19)
-  Serial.println("Mega 2560 就緒 (含放開歸零功能)");
+  Serial1.begin(9600);  // 與 ESP32 通訊用
+  Serial.println("Mega 2560 就緒 (含每秒自動更新功能)");
 }
 
 void loop() {
@@ -29,9 +29,8 @@ void loop() {
   
   // 快速掃描 20 個腳位
   for (uint8_t i = 0; i < N; ++i) {
-    // 假設按下按鈕是 LOW (接地)
     if (digitalRead(pPort[i]) == LOW) { 
-      v += String(i + 1) + ","; 
+      v += String(i + 1) + ",";
     }
   }
 
@@ -39,30 +38,29 @@ void loop() {
     v.remove(v.length() - 1);
   }
 
-  // 只有當「狀態改變」時才傳送
-  if (v != lastSentState) {
+  unsigned long currentMillis = millis();
+
+  // ★★★ 關鍵修改：除了狀態改變，每 1000ms (1秒) 也強制傳送一次 ★★★
+  // 這樣 ESP32 剛開機或斷線重連後，馬上就能收到最新狀態
+  if (v != lastSentState || (currentMillis - lastForceSendTime > 1000)) {
     
     // 更新記錄
     lastSentState = v;
+    lastForceSendTime = currentMillis; // 重置計時器
 
-    // 如果 v 有長度，代表有按鈕被按下
     if (v.length() > 0) {
-      Serial1.println(v);        // 傳送按鈕編號 (例如 "1,5")
-      Serial.println("狀態改變，已傳送: " + v);
-    } 
-    // 如果 v 是空的，代表全部放開了
-    else {
-      // 當全部放開時，傳送 "0" 給 ESP32
-      // 這樣 Google Apps Script 收到 0，就會把所有欄位顯示為 No
-      Serial1.println("0"); 
-      Serial.println("按鈕已全部放開 (傳送歸零訊號 0)");
+      Serial1.println(v);
+      Serial.println("傳送: " + v);
+    } else {
+      Serial1.println("0");
+      Serial.println("傳送: 0 (全空)");
     }
     
-    // 稍微閃一下燈表示有動作
+    // 閃燈提示有傳送資料
     digitalWrite(13, HIGH);
     delay(10);
     digitalWrite(13, LOW);
   }
 
-  delay(50); 
+  delay(50); // 掃描頻率
 }

@@ -9,36 +9,37 @@ class HudScreen {
 public:
   HudScreen(Adafruit_ILI9341* display)
     : tft(display), cText(display) { 
-    colBG    = tft->color565(0, 70, 110);    
+    colBG    = tft->color565(0, 70, 110);     
     colRed   = ILI9341_RED; 
     colGreen = ILI9341_GREEN;
     colText  = tft->color565(230, 242, 255); 
-    colValue = tft->color565(255, 114, 198); 
-    colTime  = tft->color565(250, 204,  21); 
+    colValue = tft->color565(255, 114, 198); // (原本的粉色，現在溫度不用這個了)
+    colHum   = tft->color565(0, 255, 255);   // 濕度青色
+    colTime  = tft->color565(250, 204,  21); // 時間黃色
   }
 
   void showBootConnecting() {
     drawBackground();
-    uint16_t text[] = {0x958B, 0x6A5F, 0x9023, 0x7DDA}; // 開機連線 (中文)
+    uint16_t text[] = {0x958B, 0x6A5F, 0x9023, 0x7DDA}; 
     drawBigText2x(text, 4, ILI9341_WHITE); 
   }
 
   void showBootSuccess() {
     drawBackground();
-    uint16_t text[] = {0x9023, 0x7DDA, 0x6210, 0x529F}; // 連線成功 (中文)
+    uint16_t text[] = {0x9023, 0x7DDA, 0x6210, 0x529F}; 
     drawBigText2x(text, 4, ILI9341_GREEN); 
   }
 
   void showBootFailed() {
     drawBackground();
-    uint16_t text[] = {0x9023, 0x7DDA, 0x5931, 0x6557}; // 連線失敗 (中文)
+    uint16_t text[] = {0x9023, 0x7DDA, 0x5931, 0x6557}; 
     drawBigText2x(text, 4, ILI9341_RED); 
   }
 
   void showMain() {
     drawBackground();
-    drawDots();                           
-    drawStatus(0.0, "--:--", "--/--/--"); 
+    drawDots();                             
+    drawStatus(0.0, 0.0, "--:--", "--/--/--"); 
     updateLastUser("Waiting...", "----"); 
   }
 
@@ -60,26 +61,21 @@ public:
     if (num >= 1 && num <= 20) updateSingleCircle(num, true); 
   }
 
-  void updateTimeTemp(float temp, const char* timeStr, const char* dateStr) {
-      drawStatus(temp, timeStr, dateStr);
+  void updateTimeTemp(float temp, float hum, const char* timeStr, const char* dateStr) {
+      drawStatus(temp, hum, timeStr, dateStr);
   }
 
-  // ★ 修改：使用英文顯示，保證不亂碼
   void updateLastUser(String name, String uid) {
-      // 清除舊區域
       tft->fillRect(10, 135, 300, 55, colBG);
       
-      // 1. 顯示標題 "Auth:"
       tft->setTextSize(2);
       tft->setCursor(20, 140);
       tft->setTextColor(ILI9341_CYAN, colBG);
       tft->print("Auth: ");
       
-      // 2. 顯示名字 (英文/數字)
       tft->setTextColor(ILI9341_WHITE, colBG);
       tft->print(name);
 
-      // 3. 顯示卡號 UID
       tft->setCursor(20, 165);
       tft->setTextColor(ILI9341_YELLOW, colBG);
       tft->print("UID : ");
@@ -89,7 +85,7 @@ public:
 private:
   Adafruit_ILI9341* tft;
   ChineseText cText;
-  uint16_t colBG, colRed, colGreen, colText, colValue, colTime;
+  uint16_t colBG, colRed, colGreen, colText, colValue, colHum, colTime;
 
   void drawBackground() {
     tft->fillScreen(colBG);
@@ -124,8 +120,7 @@ private:
     tft->setTextSize(1);
     tft->setTextColor(colRed, colBG); 
     int radius = 10; int startX = 35; int spacing = 28; 
-    int y1 = 45; // 微調高度
-    int y2 = 80; 
+    int y1 = 45; int y2 = 80; 
     for (int i = 0; i < 10; ++i) drawCircleNumber(startX + i * spacing, y1, radius, i + 1);
     for (int i = 0; i < 10; ++i) drawCircleNumber(startX + i * spacing, y2, radius, i + 11);
   }
@@ -162,28 +157,50 @@ private:
     tft->print(i);
   }
 
-  // ★ 修改：平衡日期與時間大小 (都用 Size 2)
-  void drawStatus(float temp, const char* timeStr, const char* dateStr) {
-    int baseY = 205; // 移到底部
-    tft->fillRect(10, baseY - 5, 300, 30, colBG); 
+  void drawStatus(float temp, float hum, const char* timeStr, const char* dateStr) {
+    int baseY = 205; 
+    tft->fillRect(0, baseY - 5, 320, 35, colBG);
 
-    // 1. 溫度
-    tft->fillCircle(20, baseY + 7, 6, ILI9341_YELLOW); 
-    tft->setTextSize(2);
-    tft->setCursor(32, baseY);
-    tft->setTextColor(colValue, colBG); tft->print(temp, 1);
-    tft->setTextColor(colText, colBG); tft->print("C");
-
-    // 2. 日期 (放大顯示，位置調整到中間)
     tft->setTextSize(2); 
-    tft->setCursor(100, baseY); 
+
+    // --- 左側：日期與時間 ---
+    tft->setCursor(2, baseY); 
     tft->setTextColor(colText, colBG);
     tft->print(dateStr); 
 
-    // 3. 時間 (右邊)
-    tft->setCursor(240, baseY); 
+    tft->setCursor(126, baseY); 
     tft->setTextColor(colTime, colBG);
     tft->print(timeStr); 
+
+    // --- 右側：溫度與濕度 ---
+    
+    // 1. 溫度 (icon: 黃, text: 黃)
+    tft->fillCircle(196, baseY + 7, 4, ILI9341_YELLOW); 
+    
+    tft->setCursor(205, baseY);
+    // ★★★ 修改處：改成黃色字 ★★★
+    tft->setTextColor(ILI9341_YELLOW, colBG); 
+    
+    if (isnan(temp)) {
+       tft->print("Err"); 
+    } else {
+       tft->print((int)temp); 
+       tft->print((char)247); 
+       tft->print("C");       
+    }
+
+    // 2. 濕度 (icon: 青, text: 青)
+    tft->fillCircle(275, baseY + 7, 4, ILI9341_CYAN); 
+    
+    tft->setCursor(284, baseY);
+    tft->setTextColor(colHum, colBG); 
+    
+    if (isnan(hum)) {
+       tft->print("--");
+    } else {
+       tft->print((int)hum); 
+       tft->print("%");
+    }
   }
 };
 
