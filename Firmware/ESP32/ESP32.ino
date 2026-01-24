@@ -1,14 +1,3 @@
-/*
- * ESP32 Master Code - V60.0 (Schedule Logic Fixed)
- * * CRITICAL FIX:
- * - Added 'checkSchedule()' back into the main loop() (It was missing in V54).
- * - Now Auto-Unlock will actually trigger.
- * * FEATURES:
- * - Remote Unlock (CMD_UNLOCK check).
- * - Schedule Sync from Google Sheets.
- * - Glass UI Compatibility.
- */
-
 #include "ChineseFont.h" 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -21,8 +10,6 @@
 #include "time.h"
 #include <DHT.h> 
 
-// ★★★ 定時解鎖設定 ★★★
-// 定時解鎖時，電磁鎖吸住 15 秒
 #define SCHEDULE_UNLOCK_DURATION 15000 
 
 struct ScheduleTime { int hour; int minute; };
@@ -44,8 +31,8 @@ int lastUnlockMinute = -1;
   #define BUZZER_OFF LOW
 #endif
 
-String MY_CITY = "高雄市"; 
-#define CWA_API_KEY "CWA-7E9EEA37-C85C-4017-BECF-066F3077E35E"      
+String MY_CITY = "輸入所在縣市"; 
+#define CWA_API_KEY "輸入中央氣象局api key"      
 String CWA_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0015-001?Authorization=";
 
 #define TFT_CS    15
@@ -78,9 +65,9 @@ const int SIGNAL_GAIN = 2;
 
 #define ILI9341_ORANGE 0xFD20 
 
-const char* ssid = "TPLINK-C50";
-const char* password = "home6977";
-String G_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyginNk74L6clpON6vAueQzlnEon2UmKcO2SSZS44Df2D5Z45Qpf92EH1gcBHqny9MJXw/exec";
+const char* ssid = "輸入SSID名稱";
+const char* password = "輸入Wifi密碼";
+String G_SCRIPT_URL = "輸入GAS網址";
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 28800; 
@@ -96,9 +83,7 @@ uint16_t exactBgColor;
 
 struct RFIDTag { uint8_t uid[4]; String name; };
 struct RFIDTag tags[3] = { 
-  {{220, 2, 232, 169}, "Li Zheng-Yan"}, 
-  {{137, 41, 41, 99}, "Meow"}, 
-  {{203, 63, 170, 13}, "School-Info"}
+  {{卡號}, "卡片名稱"}, 
 };
 byte totalTags = sizeof(tags) / sizeof(RFIDTag);
 
@@ -120,7 +105,7 @@ unsigned long lastQuakeCheckTime = 0;
 
 bool lastDoorClosedState = false; 
 bool isAutoLocking = false;   
-bool isScheduleUnlock = false; // 標記：是否為定時解鎖
+bool isScheduleUnlock = false;
 
 volatile bool wifiReady = false;        
 String sharedMegaMsg = "0";              
@@ -160,18 +145,15 @@ String urlEncode(String str) {
     return encodedString;
 }
 
-// 解析從 Google 傳來的排程字串 (例如 "08:10,12:00")
 void updateScheduleFromString(String payload) {
     if (payload.length() < 3) return;
     if (payload.indexOf("Error") >= 0 || payload.indexOf("Busy") >= 0) return;
 
-    // 如果沒有包含冒號，代表沒有有效時間，跳過
     if (payload.indexOf(':') == -1) return;
 
     int index = 0;
     int arrayPos = 0;
     
-    // 清空舊排程 (重要)
     scheduleCount = 0; 
 
     while (index < payload.length() && arrayPos < 30) {
@@ -194,7 +176,6 @@ void updateScheduleFromString(String payload) {
     Serial.print("Schedule Sync OK. Count: "); Serial.println(scheduleCount);
 }
 
-// 統一解鎖函式
 void triggerUnlock(String line1, String line2, bool isSchedule) {
     Serial.println("Unlock: " + line1 + " " + line2);
     hud->updateLastUser(line1, line2);
@@ -203,7 +184,7 @@ void triggerUnlock(String line1, String line2, bool isSchedule) {
     isValvePowered = true; 
     isLogicallyOpen = true; 
     isAutoLocking = false; 
-    isScheduleUnlock = isSchedule; // 設定標記
+    isScheduleUnlock = isSchedule;
     
     valveOpenStartTime = millis(); 
     sharedValveState = "1"; 
@@ -233,13 +214,11 @@ bool performUpload(String megaData, String valveState, String user) {
       if (httpCode > 0 && (httpCode == 200 || httpCode == 302)) {
           String response = http.getString();
           
-          // 1. 檢查遠端開門指令
           if (response.indexOf("CMD_UNLOCK") >= 0) {
               Serial.println("[CMD] Remote Unlock!");
               triggerUnlock("Remote", "Web User", false);
           }
           
-          // 2. 更新排程 (如果不含 CMD_UNLOCK，通常就是純排程字串)
           updateScheduleFromString(response);
           
           lastUploadTime = millis();
@@ -325,24 +304,20 @@ void checkEarthquake() {
   }
 }
 
-// ★★★ 檢查排程函式 ★★★
 void checkSchedule() {
   if (scheduleCount == 0) return; 
 
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){ return; }
 
-  // 避免同一分鐘重複觸發
   if (timeinfo.tm_min == lastUnlockMinute) return;
   
-  // 排除週末 (0=週日, 6=週六)
   if (timeinfo.tm_wday == 0 || timeinfo.tm_wday == 6) return;
 
   for(int i=0; i<scheduleCount; i++) {
     if (timeinfo.tm_hour == unlockSchedule[i].hour && 
         timeinfo.tm_min == unlockSchedule[i].minute) {
         
-        // 觸發定時解鎖
         String timeStr = String(timeinfo.tm_hour) + ":" + ((timeinfo.tm_min < 10) ? "0" : "") + String(timeinfo.tm_min);
         triggerUnlock("AUTOUNLOCK", timeStr, true);
         
@@ -350,7 +325,6 @@ void checkSchedule() {
         return;
     }
   }
-  // 更新分鐘標記，確保每分鐘只檢查一次
   lastUnlockMinute = timeinfo.tm_min; 
 }
 
@@ -556,7 +530,7 @@ void setup() {
 void loop() {
   handleMegaSerial();
   handleRFID();
-  checkSchedule(); // ★★★ 最關鍵的修復：把這行加回來了！ ★★★
+  checkSchedule();
   
   if (millis() < WARMUP_TIME) {
       isWarmedUp = false;
