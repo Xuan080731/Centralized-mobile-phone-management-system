@@ -1,4 +1,4 @@
-var SS_ID = "填入試算表 ID"; 
+var SS_ID = "填入您的試算表 ID"; 
 
 var SCHEDULE_SHEET_NAME = "排程設定";
 

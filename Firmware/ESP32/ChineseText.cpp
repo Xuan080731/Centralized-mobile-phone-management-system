@@ -50,7 +50,6 @@ void ChineseText::drawUTF8Text(const char* utf8str, int x, int y, uint16_t fg, i
     int xpos = x;
     while (utf8str[i]) {
         if ((utf8str[i] & 0xF0) == 0xE0) {
-            // 將 3 bytes UTF-8 轉為 16-bit Unicode
             uint16_t code = ((utf8str[i] & 0x0F) << 12) |
                             ((utf8str[i + 1] & 0x3F) << 6) |
                             (utf8str[i + 2] & 0x3F);
@@ -59,7 +58,6 @@ void ChineseText::drawUTF8Text(const char* utf8str, int x, int y, uint16_t fg, i
             xpos += ww + dx; 
             i += 3; 
         } 
-        // 判斷是否為一般 ASCII (英文/數字)
         else if ((utf8str[i] & 0x80) == 0) {
             tft->setCursor(xpos, y+8);
             tft->setTextSize(2);

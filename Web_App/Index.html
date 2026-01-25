@@ -37,7 +37,6 @@
         --border: var(--color-light-border);
         --shadow: var(--shadow-base);
         
-        /* 明確的灰色底色 */
         --badge-closed-bg: #d1d5db; 
         --badge-closed-text: #374151;
         
@@ -153,10 +152,10 @@
       .slot.empty { background: var(--success-bg); } .slot.empty .slot-num, .slot.empty .slot-status { color: var(--success-text); }
 
       .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-      .modal { background: #fff; width: 90%; max-width: 380px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #333; }
+      .modal { background: #fff; width: 90%; max-width: 380px; border-radius: 16px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); color: #333; }
       .time-list { max-height: 250px; overflow-y: auto; margin: 15px 0; border: 1px solid #eee; padding: 10px; border-radius: 8px;}
       .time-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: center;}
-      .time-input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 1.2rem; flex: 1; text-align: center;}
+      .time-input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 1.2rem; flex: 1; text-align: center; color: #374151;}
       .btn-del { background: #fee2e2; color: #b91c1c; border: none; padding: 0 12px; height: 38px; border-radius: 6px; cursor: pointer; }
       .btn-add { background: #d1fae5; color: #047857; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
       .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;}
@@ -182,8 +181,22 @@
         <div class="time-list" id="time-list"></div>
         <button class="btn-add" onclick="addTimeSlot()"><i class="fas fa-plus-circle"></i> 新增時間</button>
         <div class="modal-actions">
-           <button class="btn-cancel" onclick="closeModal()">取消</button>
+           <button class="btn-cancel" onclick="closeModal('setting-modal')">取消</button>
            <button class="btn-save" onclick="saveSettings()">儲存</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="pin-modal">
+      <div class="modal">
+        <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">安全驗證</h3>
+        <p style="text-align:center; color:#4b5563; margin-bottom:20px;">請輸入 4 位數 PIN 碼：</p>
+        <div style="display:flex; justify-content:center; margin-bottom:20px;">
+            <input type="password" id="pin-input" class="time-input" maxlength="4" style="width:150px; font-size:2rem; letter-spacing:8px; text-align:center;">
+        </div>
+        <div class="modal-actions">
+           <button class="btn-cancel" onclick="closePinModal()">取消</button>
+           <button class="btn-save" onclick="verifyPin()">確認</button>
         </div>
       </div>
     </div>
@@ -252,6 +265,7 @@
       let lastEspTimestamp = 0;
       const TIMEOUT_MS = 90 * 1000;
       let isPinVerified = false; 
+      let pendingCallback = null; // 儲存驗證後要執行的動作
 
       function createGrid(){const grid=document.getElementById('grid');grid.innerHTML='';for(let i=1;i<=20;i++){let div=document.createElement('div');div.className='slot empty';div.id='slot-'+i;div.innerHTML=`<div class="slot-num">${i}</div><div class="slot-status">空置</div>`;grid.appendChild(div);}}
       
@@ -284,17 +298,38 @@
       }
 
       function performWithAuth(callback) {
-          if (isPinVerified) { callback(); return; }
-          let pin = prompt("【安全驗證】\n請輸入 4 位數 PIN 碼：");
-          if (pin === null) return; 
-          if (pin === "0731") {
-              isPinVerified = true; 
-              alert("✅ 驗證成功！");
+          if (isPinVerified) {
               callback();
+              return;
+          }
+          pendingCallback = callback;
+          document.getElementById('pin-input').value = '';
+          document.getElementById('pin-modal').style.display = 'flex';
+          setTimeout(() => document.getElementById('pin-input').focus(), 100);
+      }
+
+      function closePinModal() {
+          document.getElementById('pin-modal').style.display = 'none';
+          pendingCallback = null;
+      }
+
+      function verifyPin() {
+          const pin = document.getElementById('pin-input').value;
+          if (pin === "0731") { //替換PIN碼
+              isPinVerified = true;
+              closePinModal();
+              alert("✅ 驗證成功！");
+              if (pendingCallback) pendingCallback();
           } else {
               alert("❌ PIN 碼錯誤！");
+              document.getElementById('pin-input').value = '';
+              document.getElementById('pin-input').focus();
           }
       }
+
+      document.getElementById('pin-input').addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') verifyPin();
+      });
 
       function askUnlock() {
           performWithAuth(() => {
@@ -321,7 +356,7 @@
           });
       }
 
-      function closeModal() { document.getElementById('setting-modal').style.display = 'none'; }
+      function closeModal(id) { document.getElementById(id).style.display = 'none'; }
       function renderTimeList(times) {
         const container = document.getElementById('time-list'); container.innerHTML = '';
         if(times.length===0) container.innerHTML='<div style="text-align:center;color:var(--text-sub); padding:10px;">目前無排程</div>';
@@ -338,14 +373,18 @@
       }
       function saveSettings() {
         const inputs = document.querySelectorAll('.time-input');
+        const modal = document.getElementById('setting-modal');
+        const realInputs = modal.querySelectorAll('input[type="time"]');
+        
         const times = [];
-        inputs.forEach(input => { if(input.value) times.push(input.value); });
+        realInputs.forEach(input => { if(input.value) times.push(input.value); });
         const btn = document.querySelector('.btn-save');
+        const oldText = btn.innerText;
         btn.innerText = "儲存中...";
         google.script.run.withSuccessHandler(() => {
            alert("✅ 設定已儲存！");
-           btn.innerText = "儲存";
-           closeModal();
+           btn.innerText = oldText;
+           closeModal('setting-modal');
         }).saveScheduleList(times);
       }
 
@@ -373,11 +412,7 @@
         const timeDisplay = document.getElementById('last-update-time');
         
         if (data.fullDateTime && data.fullDateTime !== "--") {
-            // ★★★ 修正點：直接顯示完整字串，不進行切割 ★★★
             timeDisplay.innerText = data.fullDateTime; 
-            timeDisplay.style.removeProperty("color");
-            timeDisplay.style.removeProperty("font-style");
-            
             document.getElementById('status-text').innerText = "系統連線成功";
             document.getElementById('live-indicator').className = "live-indicator ok";
 
@@ -400,7 +435,7 @@
         airCard.classList.remove('danger-alert'); 
 
         if (smk == -1) { 
-            air.innerText="校正中..."; air.style.color="#00CED1"; airIcon.className = "fas fa-sync fa-spin"; airIcon.style.color = "#00CED1";
+            air.innerText="校正中"; air.style.color="#00CED1"; airIcon.className = "fas fa-sync fa-spin"; airIcon.style.color = "#00CED1";
         } else if(smk >= 100){ 
             air.innerText="疑似偵測到煙霧"; air.style.color="#ef4444"; airCard.classList.add("danger-alert"); airIcon.className = "fas fa-fire"; airIcon.style.color = "var(--danger-text)";
         } else if(smk >= 80){ 
@@ -443,7 +478,7 @@
             
             box.style.borderColor = "transparent";
             box.style.boxShadow = ""; 
-            // 修正：留白
+            
             user.innerText = ""; uid.innerText = "";
         }
       }
