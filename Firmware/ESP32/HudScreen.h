@@ -13,9 +13,9 @@ public:
     colRed   = ILI9341_RED; 
     colGreen = ILI9341_GREEN;
     colText  = tft->color565(230, 242, 255); 
-    colValue = tft->color565(255, 114, 198); // (原本的粉色，現在溫度不用這個了)
-    colHum   = tft->color565(0, 255, 255);   // 濕度青色
-    colTime  = tft->color565(250, 204,  21); // 時間黃色
+    colValue = tft->color565(255, 114, 198); 
+    colHum   = tft->color565(0, 255, 255); 
+    colTime  = tft->color565(250, 204,  21);
   }
 
   void showBootConnecting() {
@@ -163,7 +163,6 @@ private:
 
     tft->setTextSize(2); 
 
-    // --- 左側：日期與時間 ---
     tft->setCursor(2, baseY); 
     tft->setTextColor(colText, colBG);
     tft->print(dateStr); 
@@ -172,13 +171,9 @@ private:
     tft->setTextColor(colTime, colBG);
     tft->print(timeStr); 
 
-    // --- 右側：溫度與濕度 ---
-    
-    // 1. 溫度 (icon: 黃, text: 黃)
     tft->fillCircle(196, baseY + 7, 4, ILI9341_YELLOW); 
     
     tft->setCursor(205, baseY);
-    // ★★★ 修改處：改成黃色字 ★★★
     tft->setTextColor(ILI9341_YELLOW, colBG); 
     
     if (isnan(temp)) {
@@ -189,7 +184,6 @@ private:
        tft->print("C");       
     }
 
-    // 2. 濕度 (icon: 青, text: 青)
     tft->fillCircle(275, baseY + 7, 4, ILI9341_CYAN); 
     
     tft->setCursor(284, baseY);

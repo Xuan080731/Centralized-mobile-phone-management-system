@@ -12,7 +12,6 @@ public:
   void drawWordNoBG(uint16_t unicode, int x, int y, uint16_t color, int w = 32, int h = 32);
   void drawUTF8Text(const char* text, int x, int y, uint16_t color, int w = 32, int dx = 0);
 
-  // ★★★ 關鍵修改：這行必須放在 public 區域，HudScreen 才能呼叫它來放大字體 ★★★
   const uint8_t* findBitmap(uint16_t unicode);
 
 private:
@@ -20,5 +19,4 @@ private:
   uint16_t fgColor, bgColor;
   uint8_t spacing;
   
-  // (原本 findBitmap 在這裡，現在已經移上去 public 了)
 };
