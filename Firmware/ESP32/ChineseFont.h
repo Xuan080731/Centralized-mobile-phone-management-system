@@ -23,9 +23,6 @@ const ChineseGlyph wordTable[] = {
   { 0x8CC7, CH_U8CC7_32x32 }, // 資
   { 0x6599, CH_U6599_32x32 }, // 料
   { 0x5EAB, CH_U5EAB_32x32 }, // 庫
-  { 0x674E, CH_U674E_32x32 }, // 李
-  { 0x653F, CH_U653F_32x32 }, // 政
-  { 0x8AFA, CH_U8Afa_32x32 }, // 諺
   { 0x55B5, CH_U55B5_32x32 }, // 喵
   { 0x5DE5, CH_U5DE5_32x32 }, // 工
   { 0x5546, CH_U5546_32x32 }, // 商
