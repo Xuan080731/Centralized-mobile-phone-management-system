@@ -22,7 +22,7 @@ int lastUnlockMinute = -1;
 #define WARMUP_TIME 25000 
 
 #define BUZZER_PIN 26          
-#define BUZZER_TYPE 0
+#define BUZZER_TYPE 0  
 #if BUZZER_TYPE == 0
   #define BUZZER_ON  LOW
   #define BUZZER_OFF HIGH
@@ -31,7 +31,7 @@ int lastUnlockMinute = -1;
   #define BUZZER_OFF LOW
 #endif
 
-String MY_CITY = "輸入所在縣市"; 
+String MY_CITY = "輸入所在台灣縣市"; 
 #define CWA_API_KEY "輸入中央氣象局api key"      
 String CWA_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0015-001?Authorization=";
 
@@ -116,13 +116,12 @@ String lastAuthUser = "";
 
 TaskHandle_t TaskUploadHandle;
 
-// ★★★ 蜂鳴器控制 ★★★
 void beep(int count) {
   for (int i = 0; i < count; i++) {
     digitalWrite(BUZZER_PIN, BUZZER_ON);
-    delay(100); // 嗶 100ms
+    delay(100); 
     digitalWrite(BUZZER_PIN, BUZZER_OFF);
-    if (i < count - 1) delay(100); // 間隔 100ms
+    if (i < count - 1) delay(100); 
   }
 }
 
@@ -223,7 +222,7 @@ bool performUpload(String megaData, String valveState, String user) {
           if (response.indexOf("CMD_UNLOCK") >= 0) {
               Serial.println("[CMD] Remote Unlock!");
               triggerUnlock("Remote", "Web User", false);
-              beep(1); // 遠端解鎖嗶1聲
+              beep(1); 
           }
           updateScheduleFromString(response);
           lastUploadTime = millis();
@@ -242,10 +241,8 @@ bool performUpload(String megaData, String valveState, String user) {
 void TaskUploadCode(void * pvParameters) {
   for(;;) { 
     if (wifiReady) {
-      if (millis() - lastUploadTime > 2000) {
-          bool needUpload = false;
-          if (dataChanged) { needUpload = true; dataChanged = false; }
-          if (millis() - lastUploadTime > HEARTBEAT_INTERVAL) { needUpload = true; }
+      if (millis() - lastUploadTime > 3500) {
+          bool needUpload = true; 
           if (needUpload) { performUpload(sharedMegaMsg, sharedValveState, lastAuthUser); }
       }
     }
@@ -273,7 +270,7 @@ void triggerEmergency(String reason) {
   isEmergencyMode = true;
   emergencyStartTime = millis();
 
-  ledcWrite(valvePin, 255);
+  ledcWrite(valvePin, 255); 
   isValvePowered = true;
   valveOpenStartTime = millis(); 
 
@@ -317,7 +314,7 @@ void checkSchedule() {
         timeinfo.tm_min == unlockSchedule[i].minute) {
         String timeStr = String(timeinfo.tm_hour) + ":" + ((timeinfo.tm_min < 10) ? "0" : "") + String(timeinfo.tm_min);
         triggerUnlock("AUTOUNLOCK", timeStr, true);
-        beep(1); // 定時解鎖嗶1聲
+        beep(1); 
         lastUnlockMinute = timeinfo.tm_min; 
         return;
     }
@@ -416,13 +413,13 @@ void handleRFID() {
     if (memcmp(tags[i].uid, rfid.uid.uidByte, rfid.uid.size) == 0) {
       foundTag = true;
       triggerUnlock(tags[i].name, uidStr, false); 
-      beep(1); // ★★★ 成功：嗶1聲 ★★★
+      beep(1); 
       break;
     }
   }
   if (!foundTag) {
       hud->updateLastUser("Access Denied", uidStr); 
-      beep(2); // ★★★ 失敗：嗶2聲 ★★★
+      beep(2); 
   }
   rfid.PICC_HaltA(); rfid.PCD_StopCrypto1();
 }
@@ -468,7 +465,7 @@ void setup() {
   Serial.begin(115200);
 
   pinMode(BUZZER_PIN, OUTPUT);
-  beep(2); // 開機測試
+  beep(2); 
 
   tft.begin();
   tft.setRotation(1);

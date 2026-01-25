@@ -1,4 +1,4 @@
-var SS_ID = "填入您的試算表 ID"; 
+var SS_ID = "填入試算表 ID"; 
 
 var SCHEDULE_SHEET_NAME = "排程設定";
 
@@ -6,7 +6,12 @@ function getMainSheet() {
   var ss = SpreadsheetApp.openById(SS_ID);
   var sheet = ss.getSheetByName("Sheet1");
   if (!sheet) sheet = ss.getSheetByName("工作表1");
-  if (!sheet) sheet = ss.getSheets()[0];
+  if (!sheet) {
+    var all = ss.getSheets();
+    for(var i=0; i<all.length; i++) {
+      if (all[i].getName() !== SCHEDULE_SHEET_NAME) { sheet = all[i]; break; }
+    }
+  }
   return sheet; 
 }
 
@@ -89,7 +94,7 @@ function doGet(e) {
       return ContentService.createTextOutput(responseString);
 
     } catch (e) {
-      return ContentService.createTextOutput("Error");
+      return ContentService.createTextOutput("Error: " + e.toString());
     } finally {
       lock.releaseLock();
     }
@@ -105,7 +110,7 @@ function getData() {
     
     if (lastRow < 2) {
        return { 
-         fullDateTime: "--", rawTimestamp: 0, 
+         fullDateTime: "--", secondsAgo: 99999, // 空表視為斷線
          pins: new Array(20).fill("No"), 
          valve: "關閉", temp: "--", hum: "--", smoke: "0", user: "", door: "0" 
        };
@@ -114,13 +119,16 @@ function getData() {
     var maxCol = sheet.getLastColumn();
     var values = sheet.getRange(lastRow, 1, 1, maxCol).getValues()[0];
     
-    var dateStr = values[0];
-    var timeStr = values[1];
-    if (typeof dateStr === 'object') dateStr = Utilities.formatDate(dateStr, Session.getScriptTimeZone(), "yyyy/MM/dd");
-    if (typeof timeStr === 'object') timeStr = Utilities.formatDate(timeStr, Session.getScriptTimeZone(), "HH:mm:ss");
-
+    var dateVal = values[0];
+    var timeVal = values[1];
+    
+    var dateStr = (dateVal instanceof Date) ? Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy/MM/dd") : dateVal;
+    var timeStr = (timeVal instanceof Date) ? Utilities.formatDate(timeVal, Session.getScriptTimeZone(), "HH:mm:ss") : timeVal;
     var fullDateTimeStr = dateStr + " " + timeStr;
-    var lastTimestamp = new Date(fullDateTimeStr).getTime(); // 修正：確實解析時間
+
+    var dataTime = new Date(fullDateTimeStr).getTime();
+    var nowTime = new Date().getTime();
+    var diffSeconds = Math.floor((nowTime - dataTime) / 1000);
 
     var pins = [];
     for(var i=2; i<22; i++) {
@@ -137,7 +145,7 @@ function getData() {
 
     return {
       fullDateTime: fullDateTimeStr,
-      rawTimestamp: lastTimestamp,
+      secondsAgo: diffSeconds,
       pins: pins,
       valve: valveStr,
       temp: tempVal,
@@ -160,22 +168,8 @@ function triggerRemoteUnlock() {
 }
 
 function getScheduleString() {
-  var ss = SpreadsheetApp.openById(SS_ID);
-  var sheet = ss.getSheetByName(SCHEDULE_SHEET_NAME);
-  if (!sheet) return "";
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 1) return "";
-  var values = sheet.getRange(1, 1, lastRow, 1).getValues();
-  var arr = [];
-  for (var i = 0; i < values.length; i++) {
-    var v = values[i][0];
-    if(v) {
-       if (v instanceof Date) v = Utilities.formatDate(v, Session.getScriptTimeZone(), "HH:mm");
-       var s = String(v);
-       if (s.indexOf(":") > -1) arr.push(s);
-    }
-  }
-  return arr.join(",");
+  var list = getScheduleList();
+  return list.join(",");
 }
 
 function getScheduleList() {

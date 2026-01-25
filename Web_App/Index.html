@@ -10,6 +10,7 @@
       :root {
         --color-light-bg-gradient: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
         --color-dark-bg-gradient: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
+        
         --color-light-glass-bg: rgba(255, 255, 255, 0.65);
         --color-dark-glass-bg: rgba(30, 41, 59, 0.85);
         
@@ -30,27 +31,16 @@
       }
       
       body {
-        --bg: var(--color-light-bg-gradient);
-        --glass: var(--color-light-glass-bg);
-        --text: var(--color-light-text-main);
-        --text-sub: var(--color-light-sub);
-        --border: var(--color-light-border);
-        --shadow: var(--shadow-base);
-        
-        --badge-closed-bg: #d1d5db; 
-        --badge-closed-text: #374151;
-        
-        --slot-bg: rgba(255, 255, 255, 0.4);
-        --slot-border: 1px solid rgba(255, 255, 255, 0.5);
+        --bg: var(--color-light-bg-gradient); --glass: var(--color-light-glass-bg);
+        --text: var(--color-light-text-main); --text-sub: var(--color-light-sub);
+        --border: var(--color-light-border); --shadow: var(--shadow-base);
+        --badge-closed-bg: #d1d5db; --badge-closed-text: #374151;
+        --slot-bg: rgba(255, 255, 255, 0.4); --slot-border: 1px solid rgba(255, 255, 255, 0.5);
         --slot-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        
-        --danger-bg: rgba(254, 202, 202, 0.7);
-        --danger-text: #7f1d1d;
-        --success-bg: rgba(167, 243, 208, 0.6);
-        --success-text: #064e3b;
+        --danger-bg: rgba(254, 202, 202, 0.7); --danger-text: #7f1d1d;
+        --success-bg: rgba(167, 243, 208, 0.6); --success-text: #064e3b;
 
-        background: var(--bg);
-        color: var(--text);
+        background: var(--bg); color: var(--text);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         margin: 0; padding: 24px 20px;
         display: flex; flex-direction: column; align-items: center; min-height: 100vh;
@@ -58,24 +48,14 @@
       }
       
       body.dark-mode {
-        --bg: var(--color-dark-bg-gradient);
-        --glass: var(--color-dark-glass-bg);
-        --text: var(--color-dark-text-main);
-        --text-sub: var(--color-dark-sub);
-        --border: var(--color-dark-border);
-        --shadow: var(--shadow-dark);
-        
-        --badge-closed-bg: rgba(75, 85, 99, 0.8);
-        --badge-closed-text: #f3f4f6;
-        
-        --slot-bg: rgba(255, 255, 255, 0.05);
-        --slot-border: 1px solid rgba(255, 255, 255, 0.05);
+        --bg: var(--color-dark-bg-gradient); --glass: var(--color-dark-glass-bg);
+        --text: var(--color-dark-text-main); --text-sub: var(--color-dark-sub);
+        --border: var(--color-dark-border); --shadow: var(--shadow-dark);
+        --badge-closed-bg: rgba(75, 85, 99, 0.8); --badge-closed-text: #f3f4f6;
+        --slot-bg: rgba(255, 255, 255, 0.05); --slot-border: 1px solid rgba(255, 255, 255, 0.05);
         --slot-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        
-        --danger-bg: rgba(185, 28, 28, 0.5);
-        --danger-text: #fca5a5;
-        --success-bg: rgba(6, 78, 59, 0.5);
-        --success-text: #6ee7b7;
+        --danger-bg: rgba(185, 28, 28, 0.5); --danger-text: #fca5a5;
+        --success-bg: rgba(6, 78, 59, 0.5); --success-text: #6ee7b7;
       }
 
       .header-container { width: 100%; max-width: 480px; margin-bottom: 24px; position: relative; display: flex; justify-content: center; align-items: center; }
@@ -92,31 +72,28 @@
       #setting-btn { right: 45px; }
 
       .glass-card {
-        background: var(--glass); 
-        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-        border: var(--border); 
-        box-shadow: var(--shadow); 
-        border-radius: 20px; transition: 0.3s;
+        background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border: var(--border); box-shadow: var(--shadow); border-radius: 20px; transition: 0.3s;
       }
       
       .status-bar { padding: 14px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 500; color: var(--text-sub); width: 100%; max-width: 480px; box-sizing: border-box; }
       .live-indicator { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+      
+      /* 呼吸燈動畫 */
       .live-indicator.ok { background: var(--status-ok); box-shadow: 0 0 10px var(--status-ok); animation: pulse 2s infinite; }
-      .live-indicator.waiting { background: var(--status-waiting); }
-      .live-indicator.timeout { background: var(--status-timeout); }
+      .live-indicator.waiting { background: var(--status-waiting); box-shadow: 0 0 10px var(--status-waiting); animation: pulse 2s infinite; }
+      .live-indicator.timeout { background: var(--status-timeout); box-shadow: 0 0 10px var(--status-timeout); animation: pulse 2s infinite; }
+      
       .time-container { display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; }
       #last-update-time { font-family: monospace; font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-sub); }
 
       .door-panel {
-        width: 100%; max-width: 480px; margin: 0 auto 16px auto; 
-        padding: 14px 24px; min-height: 70px; 
+        width: 100%; max-width: 480px; margin: 0 auto 16px auto; padding: 14px 24px; min-height: 70px; 
         display: flex; align-items: center; justify-content: space-between; 
         box-sizing: border-box; cursor: pointer; position: relative;
-        outline: none; -webkit-tap-highlight-color: transparent;
-        border: 2px solid transparent; 
+        outline: none; -webkit-tap-highlight-color: transparent; border: 2px solid transparent; 
       }
       .door-panel:active { transform: scale(0.98); }
-      
       .door-left { display: flex; flex-direction: column; justify-content: center; }
       .door-title { font-size: 0.95rem; color: var(--text-sub); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
       #lock-icon { font-size: 1.4rem; }
@@ -138,14 +115,8 @@
       .grid-header { width: 100%; max-width: 480px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; }
       .grid-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
       .legend { font-size: 0.8rem; display: flex; gap: 12px; color: var(--text-sub); }
-      
       .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; max-width: 480px; margin-bottom: 40px; }
-      .slot { 
-        aspect-ratio: 1; border-radius: 16px; 
-        display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        background: var(--slot-bg); border: var(--slot-border); box-shadow: var(--slot-shadow);
-        transition: 0.3s; backdrop-filter: blur(4px);
-      }
+      .slot { aspect-ratio: 1; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--slot-bg); border: var(--slot-border); box-shadow: var(--slot-shadow); transition: 0.3s; backdrop-filter: blur(4px); }
       .slot-num { font-size: 1.25rem; font-weight: 700; margin-bottom: 2px; color: var(--text); }
       .slot-status { font-size: 0.75rem; font-weight: 600; opacity: 0.9; }
       .slot.active { background: var(--danger-bg); } .slot.active .slot-num, .slot.active .slot-status { color: var(--danger-text); }
@@ -162,6 +133,7 @@
       .btn-save { background: #3b82f6; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
       .btn-cancel { background: #f3f4f6; color: #4b5563; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
 
+      @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
       @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
       .danger-alert { animation: shake 0.5s; background-color: rgba(239, 68, 68, 0.2) !important; border-color: var(--status-timeout) !important; }
       .danger-text { color: var(--status-timeout) !important; }
@@ -210,7 +182,7 @@
     <div class="status-bar glass-card">
       <div style="display:flex; align-items:center; flex: 1 1 auto; min-width: 0;">
           <span id="live-indicator" class="live-indicator waiting" style="flex-shrink: 0;"></span>
-          <span id="status-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 5px;">連線中...</span>
+          <span id="status-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 5px;">正在等待訊號...</span>
       </div>
       <div class="time-container">
         <span class="time-label">最後連線：</span>
@@ -262,10 +234,10 @@
     <script>
       const THEME_KEY = 'monitor_theme';
       let currentTheme = 'light';
-      let lastEspTimestamp = 0;
+      const pageLoadTime = Date.now(); 
       const TIMEOUT_MS = 90 * 1000;
       let isPinVerified = false; 
-      let pendingCallback = null; // 儲存驗證後要執行的動作
+      let pendingCallback = null;
 
       function createGrid(){const grid=document.getElementById('grid');grid.innerHTML='';for(let i=1;i<=20;i++){let div=document.createElement('div');div.className='slot empty';div.id='slot-'+i;div.innerHTML=`<div class="slot-num">${i}</div><div class="slot-status">空置</div>`;grid.appendChild(div);}}
       
@@ -298,14 +270,11 @@
       }
 
       function performWithAuth(callback) {
-          if (isPinVerified) {
-              callback();
-              return;
-          }
+          if (isPinVerified) { callback(); return; }
           pendingCallback = callback;
-          document.getElementById('pin-input').value = '';
+          document.getElementById('pin-input').value = ''; 
           document.getElementById('pin-modal').style.display = 'flex';
-          setTimeout(() => document.getElementById('pin-input').focus(), 100);
+          setTimeout(() => document.getElementById('pin-input').focus(), 100); 
       }
 
       function closePinModal() {
@@ -315,7 +284,7 @@
 
       function verifyPin() {
           const pin = document.getElementById('pin-input').value;
-          if (pin === "0731") { //替換PIN碼
+          if (pin === "0731") { //設定PIN碼
               isPinVerified = true;
               closePinModal();
               alert("✅ 驗證成功！");
@@ -335,7 +304,6 @@
           performWithAuth(() => {
               const lockIcon = document.getElementById('lock-icon');
               const originalEmoji = lockIcon.innerText;
-              
               lockIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
               document.getElementById('panel-box').onclick = null;
 
@@ -372,10 +340,8 @@
         container.appendChild(div);
       }
       function saveSettings() {
-        const inputs = document.querySelectorAll('.time-input');
         const modal = document.getElementById('setting-modal');
         const realInputs = modal.querySelectorAll('input[type="time"]');
-        
         const times = [];
         realInputs.forEach(input => { if(input.value) times.push(input.value); });
         const btn = document.querySelector('.btn-save');
@@ -386,16 +352,6 @@
            btn.innerText = oldText;
            closeModal('setting-modal');
         }).saveScheduleList(times);
-      }
-
-      function checkConnectionStatus() {
-          const now = Date.now();
-          const txt = document.getElementById('status-text');
-          const ind = document.getElementById('live-indicator');
-          if (lastEspTimestamp === 0) return;
-          if (now - lastEspTimestamp > TIMEOUT_MS) {
-               txt.innerText = "連線逾時 (超過90秒)"; ind.className = "live-indicator timeout";
-          }
       }
 
       function fetchData() { 
@@ -410,18 +366,30 @@
 
       function updateUI(data) {
         const timeDisplay = document.getElementById('last-update-time');
+        const statusText = document.getElementById('status-text');
+        const indicator = document.getElementById('live-indicator');
         
         if (data.fullDateTime && data.fullDateTime !== "--") {
             timeDisplay.innerText = data.fullDateTime; 
-            document.getElementById('status-text').innerText = "系統連線成功";
-            document.getElementById('live-indicator').className = "live-indicator ok";
-
-            if (data.rawTimestamp && typeof data.rawTimestamp === 'number' && data.rawTimestamp > 0) {
-                 if (data.rawTimestamp > lastEspTimestamp) lastEspTimestamp = data.rawTimestamp;
+            
+            if (data.secondsAgo <= 90) {
+                statusText.innerText = "系統連線成功";
+                indicator.className = "live-indicator ok";
+            } 
+            else {
+                const timeSinceOpen = Date.now() - pageLoadTime;
+                
+                if (timeSinceOpen < TIMEOUT_MS) {
+                    statusText.innerText = "正在等待連線...";
+                    indicator.className = "live-indicator waiting";
+                } else {
+                    statusText.innerText = "連線逾時 (超過90秒)";
+                    indicator.className = "live-indicator timeout";
+                }
             }
         } else {
-            document.getElementById('status-text').innerText = "等待資料同步...";
-            document.getElementById('live-indicator').className = "live-indicator waiting";
+            statusText.innerText = "等待資料同步...";
+            indicator.className = "live-indicator waiting";
         }
 
         document.getElementById('temp-display').innerText = data.temp;
@@ -488,7 +456,6 @@
         initializeTheme();
         fetchData();
         setInterval(fetchData, 1000);
-        setInterval(checkConnectionStatus, 1000);
       };
     </script>
   </body>
