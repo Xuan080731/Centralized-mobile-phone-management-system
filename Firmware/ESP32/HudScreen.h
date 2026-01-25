@@ -64,9 +64,7 @@ public:
       drawStatus(temp, timeStr, dateStr);
   }
 
-  // ★ 修改：使用英文顯示，保證不亂碼
   void updateLastUser(String name, String uid) {
-      // 清除舊區域
       tft->fillRect(10, 135, 300, 55, colBG);
       
       // 1. 顯示標題 "Auth:"
@@ -124,7 +122,7 @@ private:
     tft->setTextSize(1);
     tft->setTextColor(colRed, colBG); 
     int radius = 10; int startX = 35; int spacing = 28; 
-    int y1 = 45; // 微調高度
+    int y1 = 45; 
     int y2 = 80; 
     for (int i = 0; i < 10; ++i) drawCircleNumber(startX + i * spacing, y1, radius, i + 1);
     for (int i = 0; i < 10; ++i) drawCircleNumber(startX + i * spacing, y2, radius, i + 11);
@@ -162,25 +160,19 @@ private:
     tft->print(i);
   }
 
-  // ★ 修改：平衡日期與時間大小 (都用 Size 2)
   void drawStatus(float temp, const char* timeStr, const char* dateStr) {
-    int baseY = 205; // 移到底部
+    int baseY = 205;
     tft->fillRect(10, baseY - 5, 300, 30, colBG); 
 
-    // 1. 溫度
     tft->fillCircle(20, baseY + 7, 6, ILI9341_YELLOW); 
     tft->setTextSize(2);
     tft->setCursor(32, baseY);
     tft->setTextColor(colValue, colBG); tft->print(temp, 1);
     tft->setTextColor(colText, colBG); tft->print("C");
-
-    // 2. 日期 (放大顯示，位置調整到中間)
     tft->setTextSize(2); 
     tft->setCursor(100, baseY); 
     tft->setTextColor(colText, colBG);
     tft->print(dateStr); 
-
-    // 3. 時間 (右邊)
     tft->setCursor(240, baseY); 
     tft->setTextColor(colTime, colBG);
     tft->print(timeStr); 

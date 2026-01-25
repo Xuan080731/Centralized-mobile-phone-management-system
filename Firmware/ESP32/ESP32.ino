@@ -25,9 +25,9 @@
 #define LOGICAL_OPEN_DURATION   30000 
 const unsigned long HEARTBEAT_INTERVAL = 60000;
 
-const char* ssid = "Xuan's Xiaomi 14 Ultra";
-const char* password = "aa970731";
-String G_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyginNk74L6clpON6vAueQzlnEon2UmKcO2SSZS44Df2D5Z45Qpf92EH1gcBHqny9MJXw/exec";
+const char* ssid = "輸入SSID名稱";
+const char* password = "輸入Wifi密碼";
+String G_SCRIPT_URL = "Google Apps Script 部署網址";
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 28800; 
@@ -38,12 +38,9 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 HudScreen* hud;
 
-// ★★★ 修改：使用英文名字 (解決亂碼) ★★★
 struct RFIDTag { uint8_t uid[4]; String name; };
 struct RFIDTag tags[3] = { 
-  {{220, 2, 232, 169}, "Li Zheng-Yan"}, 
-  {{137, 41, 41, 99}, "Meow"}, 
-  {{203, 63, 170, 13}, "School-Info"}
+ {{卡號}, "卡片名稱"}
 };
 byte totalTags = sizeof(tags) / sizeof(RFIDTag);
 
@@ -190,7 +187,6 @@ void handleRFID() {
       foundTag = true;
       Serial.print("   驗證成功！歡迎："); Serial.println(tags[i].name);
       
-      // 更新介面 (現在吃 String 就不會亂碼了)
       hud->updateLastUser(tags[i].name, uidStr);
 
       digitalWrite(valvePin, VALVE_ACTIVE);
